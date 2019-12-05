@@ -1,0 +1,26 @@
+name: mssql
+summary: A charm used for SQL Server instance on Kubernetes,
+    with persistent storage for high availability (HA)
+maintainer: Camille Rodriguez <camille.rodriguez@canonical.com>
+description: A charm used for SQL Server instance on Kubernetes,
+    with persistent storage for high availability (HA). The solution provides
+    resiliency. If the SQL Server instance fails, Kubernetes automatically
+    re-creates it in a new pod. Kubernetes also provides resiliency against
+    a node failure.
+tags:
+    - database
+    - kubernetes
+series:
+    - kubernetes
+deployment:
+    min-version: '1.16'
+    type: stateful
+    service: loadbalancer
+provides:
+    db:
+        interface: mssql
+subordinate: false
+storage: #https://jaas.ai/docs/persistent-storage-and-kubernetes
+    database:
+        type: filesystem
+        location: /var/opt/mssql
