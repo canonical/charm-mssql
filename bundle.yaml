@@ -2,6 +2,6 @@ bundle: kubernetes
 applications:
   mssql:
     charm: ./
-    scale: 2
+    scale: 1
     options:
       container_config: include-file://container_config.yaml

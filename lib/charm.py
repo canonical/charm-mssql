@@ -3,6 +3,7 @@
 import os
 import base64
 import pickle
+from base64 import b64encode
 
 from op.charm import CharmBase, CharmEvents
 from op.framework import Event, EventBase, StoredState
@@ -124,7 +125,23 @@ class Charm(CharmBase):
             ],
             # "restartPolicy": 'Always',
             # "terminationGracePeriodSeconds": 10,
+            'kubernetesResources': {
+                'secrets': [
+                    {
+                        'name': 'mssql',
+                        'type': 'Opaque',
+                        'data': {
+                            'username': (b64encode(
+                                ('SA_PASSWORD').encode('utf-8')).decode('utf-8')),
+                            'password': (b64encode(
+                                ('MyC0m9l&xP@ssw0rd').encode('utf-8')).decode('utf-8')),
+                        }
+                    }
+                ]
+            }
         }
+        log(spec)
+        # 'TXlDMG05bCZ4UEBzc3cwcmQK',
         config_with_secrets = self.full_container_config()
         if config_with_secrets is None:
             return None

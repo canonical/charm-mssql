@@ -1,4 +1,3 @@
 # List of environment variables to push into the containers
 MSSQL_PID: 'developer'
 ACCEPT_EULA: 'Y'
-MSSQL_SA_PASSWORD: 'test' #TODO: refer to secret SA_PASSWORD
