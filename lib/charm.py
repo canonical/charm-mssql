@@ -49,7 +49,6 @@ class Charm(CharmBase):
     def on_start(self, event):
         log('Ran on_start hook')
         new_pod_spec = self.make_pod_spec()
-        self.state.spec = new_pod_spec
         self._apply_spec(new_pod_spec)
 
     def on_stop(self, event):
@@ -63,8 +62,9 @@ class Charm(CharmBase):
         self.framework.model.unit.status = ActiveStatus()
 
     def _apply_spec(self, spec):
-        self.framework.model.pod.set_spec(spec)
-        self.state.spec = spec
+        if self.framework.model.unit.is_leader():
+            self.framework.model.pod.set_spec(spec)
+            self.state.spec = spec
 
     def on_mssql_ready(self, event):
         pass
