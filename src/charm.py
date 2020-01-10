@@ -12,9 +12,11 @@ from op.main import main
 
 import logging
 import subprocess
+import sys
 import yaml
 
 logger = logging.getLogger()
+sys.path.append('lib')
 
 
 class MSSQLReadyEvent(EventBase):
