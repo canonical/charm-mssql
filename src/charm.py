@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 
-import os
-import base64
-import pickle
-from base64 import b64encode
+import sys
+sys.path.append('lib')
 
-from op.charm import CharmBase, CharmEvents
-from op.framework import Event, EventBase, StoredState
-from op.model import ActiveStatus, BlockedStatus
-from op.main import main
+from base64 import b64encode
+from ops.charm import CharmBase, CharmEvents
+from ops.framework import Event, EventBase, StoredState
+from ops.model import ActiveStatus, BlockedStatus
+from ops.main import main
 
 import logging
 import subprocess
-import sys
+
 import yaml
 
 logger = logging.getLogger()
-sys.path.append('lib')
+
 
 
 class MSSQLReadyEvent(EventBase):
