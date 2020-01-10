@@ -24,3 +24,4 @@ storage: #https://jaas.ai/docs/persistent-storage-and-kubernetes
     database:
         type: filesystem
         location: /var/opt/mssql
+        minimum-size: 8G

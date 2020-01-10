@@ -131,9 +131,9 @@ class Charm(CharmBase):
                         'name': 'mssql',
                         'type': 'Opaque',
                         'data': {
-                            'username': (b64encode(
-                                ('SA_PASSWORD').encode('utf-8')).decode('utf-8')),
-                            'password': (b64encode(
+ #                           'username': (b64encode(
+  #                              ('SA_PASSWORD').encode('utf-8')).decode('utf-8')),
+                            'SA_PASSWORD': (b64encode(
                                 ('MyC0m9l&xP@ssw0rd').encode('utf-8')).decode('utf-8')),
                         }
                     }
