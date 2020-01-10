@@ -23,7 +23,7 @@ class MSSQLReadyEvent(EventBase):
 
 
 class MSSQLCharmEvents(CharmEvents):
-    mssql_ready = Event(MSSQLReadyEvent)
+    mssql_ready = EventSource(MSSQLReadyEvent)
 
 
 class Charm(CharmBase):
