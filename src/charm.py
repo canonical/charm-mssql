@@ -5,7 +5,7 @@ sys.path.append('lib')
 
 from base64 import b64encode
 from ops.charm import CharmBase, CharmEvents
-from ops.framework import Event, EventBase, StoredState
+from ops.framework import EventSource, EventBase, StoredState
 from ops.model import ActiveStatus, BlockedStatus
 from ops.main import main
 
