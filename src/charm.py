@@ -132,8 +132,6 @@ class Charm(CharmBase):
                         'name': 'mssql',
                         'type': 'Opaque',
                         'data': {
- #                           'username': (b64encode(
-  #                              ('SA_PASSWORD').encode('utf-8')).decode('utf-8')),
                             'SA_PASSWORD': (b64encode(
                                 ('MyC0m9l&xP@ssw0rd').encode('utf-8')).decode('utf-8')),
                         }
@@ -141,8 +139,6 @@ class Charm(CharmBase):
                 ]
             }
         }
-        log(spec)
-        # 'TXlDMG05bCZ4UEBzc3cwcmQK',
         config_with_secrets = self.full_container_config()
         if config_with_secrets is None:
             return None
