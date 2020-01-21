@@ -1,11 +1,6 @@
 # Deployment Preparation
 
-In order to use the charm, you need to place the Operator Framework modules 
-under lib. Use `Makefile` to do that:
-
-```
-make build
-```
+This charm deploys on top of Kubernetes.
 
 # MicroK8s Setup
 
@@ -29,8 +24,9 @@ https://www.microsoft.com/sql-server/sql-server-2017-pricing.
 `persistentVolumeClaim`: This value requires an entry for claimName: that maps 
 to the name used for the persistent volume claim. This tutorial uses mssql-data.
 
+#TODO: Set up as secret instead of env var once this is pushed LP:1858515
 `SA_PASSWORD`: Configures the container image to set the SA password, 
-as defined in this section.
+as defined in this section. 
 ```
 valueFrom:
   secretKeyRef:
@@ -42,3 +38,20 @@ to get the value for the password.
 
 By using the `LoadBalancer` service type, the SQL Server instance is accessible 
 remotely (via the internet) at port 1433.
+
+If you are deploying locally on top of MicroK8s, the service is reachable over
+the port-forwarding configuration. For example, for a service exposed like this:
+```
+NAMESPACE NAME           TYPE          CLUSTER-IP     EXTERNAL-IP  PORT(S)
+mssql     service/mssql  LoadBalancer  10.152.183.16  <pending>    1443:32542/TCP
+```
+And a host of IP `192.168.1.75`, then the service would be reachable at
+`192.168.1.75:32542`. 
+
+# SQL Utility
+To communicate with the database, the sql utility comes handy. Instructions to
+install it on ubuntu are available here 
+https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-setup-tools?view=sql-server-ver15#ubuntu .
+
+An example of command to connect to the database would be:
+`sqlcmd -S 192.168.1.75,32038  -U sa -P "MyC0m9l&xP@ssw0rd"`
