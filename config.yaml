@@ -31,8 +31,5 @@ options:
           YAML formatted map of secrets. Works just like container_config.
       default: "{'name': 'MSSQL_SA_PASSWORD',
                 'type': Opaque,
-                'data': {
-                  username: 'SA_PASSWORD',
-                  password: 'MyC0m9l&xP@ssw0rd',
-                  },
+                'SA_PASSWORD': 'MyC0m9l&xP@ssw0rd',
                 }"

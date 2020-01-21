@@ -87,7 +87,7 @@ class Charm(CharmBase):
         container_config= self.sanitized_container_config()
         if container_config is None:
             return  # status already set
-        ports = [{"name": "mssql", "containerPort": 1443, "protocol": "TCP"}]
+        ports = [{"name": "mssql", "containerPort": 1433, "protocol": "TCP"}]
         spec = {
             'version': 2,
             'serviceAccount': {
