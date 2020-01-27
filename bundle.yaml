@@ -3,5 +3,3 @@ applications:
   mssql:
     charm: ./
     scale: 1
-    options:
-      container_config: include-file://container_config.yaml
