@@ -1,16 +1,8 @@
 options:
-  user:
-    type: string
-    description: 'The database user name.'
-    default: 'admin'
   database:
     type: string
     description: 'The database name.'
     default: 'mssql'
-  root_password:
-    type: string
-    description: 'The database root password.'
-    default: 'MSSQL_SA_PASSWORD'
   image:
     type: string
     name: mssql
@@ -24,7 +16,9 @@ options:
       default: tcp:1433
   container_config:
     type: string
-    default: ""
+    default: "{'MSSQL_PID': 'developer',
+              'ACCEPT_EULA': 'Y',
+              }"
   container_secrets:
       type: string
       description: |
