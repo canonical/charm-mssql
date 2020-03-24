@@ -124,8 +124,6 @@ class Charm(CharmBase):
                     "config": container_config,
                 }
             ],
-            # "restartPolicy": 'Always',
-            # "terminationGracePeriodSeconds": 10,
             'kubernetesResources': {
                 'secrets': [
                     {
