@@ -26,7 +26,7 @@ class MSSQLCharmEvents(CharmEvents):
     mssql_ready = EventSource(MSSQLReadyEvent)
 
 
-class Charm(CharmBase):
+class MSSQLCharm(CharmBase):
     on = MSSQLCharmEvents()
     state = StoredState()
 
@@ -71,19 +71,19 @@ class Charm(CharmBase):
 
         self.model.unit.status = MaintenanceStatus('Setting pod spec')
 
-        # Completing container_config with secret
+        log('Adding secret to container_config', level='INFO')
         config = self.framework.model.config
         container_config= self.sanitized_container_config()
         container_config['mssql-secret'] = {'secret' : {'name': 'mssql'}}
 
-        # Checking ports syntax
+        log('Validating ports syntax', level='INFO')
         ports = yaml.safe_load(self.framework.model.config["ports"])
         if not isinstance(ports, list):
             self.model.unit.status = \
                 BlockedStatus("ports is not a list of YAMLs")
             return
 
-        # Password validation
+        log('Validating password', level='INFO')
         check_password = self.framework.model.config["sa_password"]
         if len(check_password) < 8 \
                 or len(check_password) > 20 \
@@ -95,6 +95,7 @@ class Charm(CharmBase):
         sa_password = b64encode((check_password).
                                 encode('utf-8')).decode('utf-8')
 
+        log('Setting pod spec', level='INFO')
         self.framework.model.pod.set_spec({
             'version': 3,
             'containers': [{
@@ -183,4 +184,4 @@ def log(message, level=None):
 
 
 if __name__ == '__main__':
-    main(Charm)
+    main(MSSQLCharm)
