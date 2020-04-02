@@ -89,7 +89,7 @@ class Charm(CharmBase):
             return  # status already set
         ports = [{"name": "mssql", "containerPort": 1433, "protocol": "TCP"}]
         spec = {
-            'version': 2,
+            'version': 3,
             'serviceAccount': {
                 'global': True,
                 'rules': [
@@ -116,12 +116,20 @@ class Charm(CharmBase):
                     },
                 ],
             },
-            "containers": [
+            'containers': [
                 {
-                    "name": self.framework.model.app.name,
-                    "image": config["image"],
-                    "ports": ports,
-                    "config": container_config,
+                    'name': self.framework.model.app.name,
+                    'image': config["image"],
+                    'ports': ports,
+                    'envConfig': container_config,
+                    'volumeConfig': {
+                        'name': 'mssql-secret',
+                        'mountPath': '/opt/secret',
+                        'secret': {
+                            'name': 'mssql',
+                            'defaultMode': 511,
+                        }
+                    },
                 }
             ],
             # "restartPolicy": 'Always',
