@@ -84,6 +84,9 @@ class Charm(CharmBase):
                 BlockedStatus("ports is not a list of YAMLs")
             return
 
+        sa_password = b64encode((self.framework.model.config["sa_password"]).
+                                encode('utf-8')).decode('utf-8')
+
 
         if container_config is not None:
             self.framework.model.pod.set_spec({
@@ -109,9 +112,7 @@ class Charm(CharmBase):
                             'name': 'mssql',
                             'type': 'Opaque',
                             'data': {
-                                'SA_PASSWORD': (b64encode(
-                                    ('MyC0m9l&xP@ssw0rd').encode(
-                                        'utf-8')).decode('utf-8')),
+                                'SA_PASSWORD': sa_password,
                             }
                         }
                     ]

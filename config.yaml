@@ -6,7 +6,7 @@ options:
   image:
     type: string
     name: mssql
-    description: 'The docker image to install.'
+    description: The docker image to install.
     default: mcr.microsoft.com/mssql/server:2017-latest
   ports:
       type: string
@@ -26,3 +26,10 @@ options:
       description: |
           YAML formatted map of secrets. Works just like container_config.
       default: ""
+  sa_password:
+      type: string
+      description: |
+        Complex password for the system administrator (SA) of the database.
+        It requires 8+ characters, at least one number, one capital letter,
+        and a special character.
+      default: 'MyC0m9l&xP@ssw0rd'
