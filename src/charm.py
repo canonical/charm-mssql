@@ -6,7 +6,7 @@ sys.path.append('lib')
 from base64 import b64encode
 from ops.charm import CharmBase, CharmEvents
 from ops.framework import EventSource, EventBase, StoredState
-from ops.model import ActiveStatus, BlockedStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus
 from ops.main import main
 
 import logging
@@ -33,8 +33,8 @@ class Charm(CharmBase):
     def __init__(self, parent, key):
         super().__init__(parent, key)
 
-        self.framework.observe(self.on.install, self)
-        self.framework.observe(self.on.start, self)
+        self.framework.observe(self.on.install, self.set_pod_spec)
+        # self.framework.observe(self.on.start, self)
         self.framework.observe(self.on.stop, self)
         self.framework.observe(self.on.config_changed, self)
         self.framework.observe(self.on.db_relation_joined, self)
@@ -42,31 +42,13 @@ class Charm(CharmBase):
         self.framework.observe(self.on.mssql_ready, self)
         self.state.set_default(spec=None)
 
-    def on_install(self, event):
-        # self.state['on_install'].append(type(event))
-        # self.state['observed_event_types'].append(type(event))
-        # self._write_state()
-        log('Ran on_install hook')
-
-    def on_start(self, event):
-        log('Ran on_start hook')
-        new_pod_spec = self.make_pod_spec()
-        self._apply_spec(new_pod_spec)
-
     def on_stop(self, event):
         log('Ran on_stop')
 
     def on_config_changed(self, event):
         log('Ran on_config_changed hook')
-        new_spec = self.make_pod_spec()
-        if self.state.spec != new_spec:
-            self._apply_spec(new_spec)
+        self.set_pod_spec(event)
         self.framework.model.unit.status = ActiveStatus()
-
-    def _apply_spec(self, spec):
-        if self.framework.model.unit.is_leader():
-            self.framework.model.pod.set_spec(spec)
-            self.state.spec = spec
 
     def on_mssql_ready(self, event):
         pass
@@ -82,42 +64,27 @@ class Charm(CharmBase):
             event.defer()
             return
 
-    def make_pod_spec(self):
+    def set_pod_spec(self, event):
+        if not self.model.unit.is_leader():
+            print('Not a leader, skipping set_pod_spec')
+            self.model.unit.status = ActiveStatus()
+            return
+
+        self.model.unit.status = MaintenanceStatus('Setting pod spec')
+
         config = self.framework.model.config
         container_config= self.sanitized_container_config()
-        if container_config is None:
-            return  # status already set
+        config_with_secrets = self.full_container_config()
+        if config_with_secrets is None:
+            return None
+        container_config.update(config_with_secrets)
+
         ports = [{"name": "mssql", "containerPort": 1433, "protocol": "TCP"}]
-        spec = {
-            'version': 2,
-            'serviceAccount': {
-                'global': True,
-                'rules': [
-                    {
-                        'apiGroups': ['apps'],
-                        'resources': ['statefulsets', 'deployments'],
-                        'verbs': ['*'],
-                    },
-                    {
-                        'apiGroups': [''],
-                        'resources': ['pods', 'pods/exec'],
-                        'verbs': ['create', 'get', 'list', 'watch', 'update',
-                                  'patch'],
-                    },
-                    {
-                        'apiGroups': [''],
-                        'resources': ['configmaps'],
-                        'verbs': ['get', 'watch', 'list'],
-                    },
-                    {
-                        'apiGroups': [''],
-                        'resources': ['persistentvolumeclaims'],
-                        'verbs': ['create', 'delete'],
-                    },
-                ],
-            },
-            'containers': [
-                {
+
+        if container_config is not None:
+            self.framework.model.pod.set_spec({
+                'version': 3,
+                'containers': [{
                     'name': self.framework.model.app.name,
                     'image': config["image"],
                     'ports': ports,
@@ -130,28 +97,58 @@ class Charm(CharmBase):
                     #         'defaultMode': 511,
                     #     }
                     # },
-                }
-            ],
-            # "restartPolicy": 'Always',
-            # "terminationGracePeriodSeconds": 10,
-            'kubernetesResources': {
-                'secrets': [
-                    {
-                        'name': 'mssql',
-                        'type': 'Opaque',
-                        'data': {
-                            'SA_PASSWORD': (b64encode(
-                                ('MyC0m9l&xP@ssw0rd').encode('utf-8')).decode('utf-8')),
+                }],
+                'kubernetesResources': {
+                    'secrets': [
+                        {
+                            'name': 'mssql',
+                            'type': 'Opaque',
+                            'data': {
+                                'SA_PASSWORD': (b64encode(
+                                    ('MyC0m9l&xP@ssw0rd').encode(
+                                        'utf-8')).decode('utf-8')),
+                            }
                         }
-                    }
-                ]
-            }
-        }
-        config_with_secrets = self.full_container_config()
-        if config_with_secrets is None:
-            return None
-        container_config.update(config_with_secrets)
-        return spec
+                    ]
+                },
+                'serviceAccount': {
+                    'roles': [{
+                        'global': True,
+                        'rules': [
+                            {
+                                'apiGroups': ['apps'],
+                                'resources': ['statefulsets', 'deployments'],
+                                'verbs': ['*'],
+                            },
+                            {
+                                'apiGroups': [''],
+                                'resources': ['pods', 'pods/exec'],
+                                'verbs': ['create', 'get', 'list', 'watch',
+                                          'update',
+                                          'patch'],
+                            },
+                            {
+                                'apiGroups': [''],
+                                'resources': ['configmaps'],
+                                'verbs': ['get', 'watch', 'list'],
+                            },
+                            {
+                                'apiGroups': [''],
+                                'resources': ['persistentvolumeclaims'],
+                                'verbs': ['create', 'delete'],
+                            },
+                        ],
+                    }]
+                },
+
+                # "restartPolicy": 'Always',
+                # "terminationGracePeriodSeconds": 10,
+
+            })
+            self.model.unit.status = ActiveStatus()
+
+
+        # return spec
 
     def sanitized_container_config(self):
         """Uninterpolated container config without secrets"""
