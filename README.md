@@ -1,6 +1,14 @@
 # Deployment Preparation
 
-This charm deploys on top of Kubernetes.
+This charm deploys on top of Kubernetes. It uses a submodule called the 
+operator framework. If you are deploying from the charm store, this step is not
+necessary. If you are cloning from source, you need to update the
+submodule:
+```
+git clone https://github.com/canonical/charm-mssql.git
+git submodule init
+git submodule update
+```
 
 # MicroK8s Setup
 
