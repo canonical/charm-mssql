@@ -6,14 +6,16 @@ options:
   image:
     type: string
     name: mssql
-    description: 'The docker image to install.'
+    description: The docker image to install.
     default: mcr.microsoft.com/mssql/server:2017-latest
   ports:
       type: string
       description: |
-        Ports to expose, space separated list in name:8000 format. Names are
-        alphanumeric + hyphen. For example: "http:80 metrics:7127"
-      default: tcp:1433
+        List of YAML formatted map of ports to expose. To add more than one,
+        simply follow the format [{map1},{map2}]
+      default: "[{'name': 'mssql',
+                'containerPort': 1433,
+                'protocol': 'TCP'}]"
   container_config:
     type: string
     default: "{'MSSQL_PID': 'developer',
@@ -23,7 +25,11 @@ options:
       type: string
       description: |
           YAML formatted map of secrets. Works just like container_config.
-      default: "{'name': 'MSSQL_SA_PASSWORD',
-                'type': Opaque,
-                'SA_PASSWORD': 'MyC0m9l&xP@ssw0rd',
-                }"
+      default: ""
+  sa_password:
+      type: string
+      description: |
+        Complex password for the system administrator (SA) of the database.
+        It requires 8+ characters, at least one number, one capital letter,
+        and a special character.
+      default: 'MyC0m9l&xP@ssw0rd'
