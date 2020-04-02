@@ -71,87 +71,83 @@ class Charm(CharmBase):
 
         self.model.unit.status = MaintenanceStatus('Setting pod spec')
 
+        # Completing container_config with secret
         config = self.framework.model.config
         container_config= self.sanitized_container_config()
-        config_with_secrets = self.full_container_config()
-        # if config_with_secrets is None:
-        #     return None
-        container_config.update(config_with_secrets)
+        container_config['mssql-secret'] = {'secret' : {'name': 'mssql'}}
 
+        # Checking ports syntax
         ports = yaml.safe_load(self.framework.model.config["ports"])
         if not isinstance(ports, list):
             self.model.unit.status = \
                 BlockedStatus("ports is not a list of YAMLs")
             return
 
-        sa_password = b64encode((self.framework.model.config["sa_password"]).
+        # Password validation
+        check_password = self.framework.model.config["sa_password"]
+        if len(check_password) < 8 \
+                or len(check_password) > 20 \
+                or not any(char.isupper() for char in check_password) \
+                or not any(char.isdigit() for char in check_password):
+            self.model.unit.status = \
+                BlockedStatus("sa_password does not respect criteria")
+            return
+        sa_password = b64encode((check_password).
                                 encode('utf-8')).decode('utf-8')
 
-
-        if container_config is not None:
-            self.framework.model.pod.set_spec({
-                'version': 3,
-                'containers': [{
-                    'name': self.framework.model.app.name,
-                    'image': config["image"],
-                    'ports': ports,
-                    'envConfig': {
-                        # container_config,
-                        'MSSQL_PID': 'developer',
-                        'ACCEPT_EULA': 'Y',
-                        'mssql-secret': {
-                            'secret': {
-                                'name': 'mssql'
-                            }
-                        },
-                    }
-                }],
-                'kubernetesResources': {
-                    'secrets': [
-                        {
-                            'name': 'mssql',
-                            'type': 'Opaque',
-                            'data': {
-                                'SA_PASSWORD': sa_password,
-                            }
+        self.framework.model.pod.set_spec({
+            'version': 3,
+            'containers': [{
+                'name': self.framework.model.app.name,
+                'image': config["image"],
+                'ports': ports,
+                'envConfig': container_config,
+                }
+            ],
+            'kubernetesResources': {
+                'secrets': [
+                    {
+                        'name': 'mssql',
+                        'type': 'Opaque',
+                        'data': {
+                            'SA_PASSWORD': sa_password,
                         }
-                    ]
-                },
-                'serviceAccount': {
-                    'roles': [{
-                        'global': True,
-                        'rules': [
-                            {
-                                'apiGroups': ['apps'],
-                                'resources': ['statefulsets', 'deployments'],
-                                'verbs': ['*'],
-                            },
-                            {
-                                'apiGroups': [''],
-                                'resources': ['pods', 'pods/exec'],
-                                'verbs': ['create', 'get', 'list', 'watch',
-                                          'update',
-                                          'patch'],
-                            },
-                            {
-                                'apiGroups': [''],
-                                'resources': ['configmaps'],
-                                'verbs': ['get', 'watch', 'list'],
-                            },
-                            {
-                                'apiGroups': [''],
-                                'resources': ['persistentvolumeclaims'],
-                                'verbs': ['create', 'delete'],
-                            },
-                        ],
-                    }]
-                },
-
-                # "restartPolicy": 'Always',
-                # "terminationGracePeriodSeconds": 10,
-
-            })
-            self.model.unit.status = ActiveStatus()
+                    }
+                ]
+            },
+            'serviceAccount': {
+                'roles': [{
+                    'global': True,
+                    'rules': [
+                        {
+                            'apiGroups': ['apps'],
+                            'resources': ['statefulsets', 'deployments'],
+                            'verbs': ['*'],
+                        },
+                        {
+                            'apiGroups': [''],
+                            'resources': ['pods', 'pods/exec'],
+                            'verbs': ['create', 'get', 'list', 'watch',
+                                      'update',
+                                      'patch'],
+                        },
+                        {
+                            'apiGroups': [''],
+                            'resources': ['configmaps'],
+                            'verbs': ['get', 'watch', 'list'],
+                        },
+                        {
+                            'apiGroups': [''],
+                            'resources': ['persistentvolumeclaims'],
+                            'verbs': ['create', 'delete'],
+                        },
+                    ],
+                }]
+            },
+            # "restartPolicy": 'Always',
+            # "terminationGracePeriodSeconds": 10,
+        })
+        self.model.unit.status = ActiveStatus()
         return
 
     def sanitized_container_config(self):
@@ -166,23 +162,6 @@ class Charm(CharmBase):
                 self.framework.model.unit.status = \
                     BlockedStatus("container_config is not a YAML mapping")
                 return None
-        return container_config
-
-    def full_container_config(self):
-        """Uninterpolated container config with secrets"""
-        config = self.framework.model.config
-        container_config = self.sanitized_container_config()
-        if container_config is None:
-            return None
-        if config["container_secrets"].strip() == "":
-            container_secrets = {}
-        else:
-            container_secrets = yaml.safe_load(config["container_secrets"])
-            if not isinstance(container_secrets, dict):
-                self.framework.model.unit.status = \
-                    BlockedStatus("container_secrets is not a YAML mapping")
-                return None
-        container_config.update(container_secrets)
         return container_config
 
 
