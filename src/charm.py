@@ -48,7 +48,6 @@ class Charm(CharmBase):
     def on_config_changed(self, event):
         log('Ran on_config_changed hook')
         self.set_pod_spec(event)
-        self.framework.model.unit.status = ActiveStatus()
 
     def on_mssql_ready(self, event):
         pass
@@ -75,11 +74,16 @@ class Charm(CharmBase):
         config = self.framework.model.config
         container_config= self.sanitized_container_config()
         config_with_secrets = self.full_container_config()
-        if config_with_secrets is None:
-            return None
+        # if config_with_secrets is None:
+        #     return None
         container_config.update(config_with_secrets)
 
-        ports = [{"name": "mssql", "containerPort": 1433, "protocol": "TCP"}]
+        ports = yaml.safe_load(self.framework.model.config["ports"])
+        if not isinstance(ports, list):
+            self.model.unit.status = \
+                BlockedStatus("ports is not a list of YAMLs")
+            return
+
 
         if container_config is not None:
             self.framework.model.pod.set_spec({
@@ -88,15 +92,16 @@ class Charm(CharmBase):
                     'name': self.framework.model.app.name,
                     'image': config["image"],
                     'ports': ports,
-                    'envConfig': container_config,
-                    # 'volumeConfig': {
-                    #     'name': 'mssql-secret',
-                    #     'mountPath': '/opt/secret',
-                    #     'secret': {
-                    #         'name': 'mssql',
-                    #         'defaultMode': 511,
-                    #     }
-                    # },
+                    'envConfig': {
+                        # container_config,
+                        'MSSQL_PID': 'developer',
+                        'ACCEPT_EULA': 'Y',
+                        'mssql-secret': {
+                            'secret': {
+                                'name': 'mssql'
+                            }
+                        },
+                    }
                 }],
                 'kubernetesResources': {
                     'secrets': [
@@ -146,9 +151,7 @@ class Charm(CharmBase):
 
             })
             self.model.unit.status = ActiveStatus()
-
-
-        # return spec
+        return
 
     def sanitized_container_config(self):
         """Uninterpolated container config without secrets"""
