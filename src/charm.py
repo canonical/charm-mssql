@@ -30,10 +30,9 @@ class Charm(CharmBase):
     on = MSSQLCharmEvents()
     state = StoredState()
 
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, parent, key):
+        super().__init__(parent, key)
 
-        # TODO: install hook will only be relevant as soon as LP: #1854635 will be fixed.
         self.framework.observe(self.on.install, self)
         self.framework.observe(self.on.start, self)
         self.framework.observe(self.on.stop, self)
@@ -41,11 +40,12 @@ class Charm(CharmBase):
         self.framework.observe(self.on.db_relation_joined, self)
         self.framework.observe(self.on.db_relation_changed, self)
         self.framework.observe(self.on.mssql_ready, self)
+        self.state.set_default(spec=None)
 
     def on_install(self, event):
-        #self._state['on_install'].append(type(event))
-        #self._state['observed_event_types'].append(type(event))
-        #self._write_state()
+        # self.state['on_install'].append(type(event))
+        # self.state['observed_event_types'].append(type(event))
+        # self._write_state()
         log('Ran on_install hook')
 
     def on_start(self, event):
@@ -89,7 +89,7 @@ class Charm(CharmBase):
             return  # status already set
         ports = [{"name": "mssql", "containerPort": 1433, "protocol": "TCP"}]
         spec = {
-            'version': 3,
+            'version': 2,
             'serviceAccount': {
                 'global': True,
                 'rules': [
@@ -122,14 +122,14 @@ class Charm(CharmBase):
                     'image': config["image"],
                     'ports': ports,
                     'envConfig': container_config,
-                    'volumeConfig': {
-                        'name': 'mssql-secret',
-                        'mountPath': '/opt/secret',
-                        'secret': {
-                            'name': 'mssql',
-                            'defaultMode': 511,
-                        }
-                    },
+                    # 'volumeConfig': {
+                    #     'name': 'mssql-secret',
+                    #     'mountPath': '/opt/secret',
+                    #     'secret': {
+                    #         'name': 'mssql',
+                    #         'defaultMode': 511,
+                    #     }
+                    # },
                 }
             ],
             # "restartPolicy": 'Always',
