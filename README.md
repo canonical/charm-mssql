@@ -9,6 +9,11 @@ git clone https://github.com/canonical/charm-mssql.git
 git submodule init
 git submodule update
 ```
+For developers of this charm, to fetch the latest updates in the operator
+framework, you need to pull the submodule git repository:
+```
+git submodule foreach git pull origin master
+```
 
 # MicroK8s Setup
 
