@@ -18,11 +18,11 @@ git submodule foreach git pull origin master
 # MicroK8s Setup
 
 ```
-sudo snap install juju --classic
+sudo snap install juju --classic --channel 2.8/candidate #or higher, stable version. 2.8 minimum
 sudo snap install microk8s --classic
 microk8s.enable dns dashboard registry storage
 juju bootstrap microk8s
-juju create-storage-pool operator-storage kubernetes storage-class=microk8s-hostpath
+juju add-model mssql
 juju deploy ./mssql
 ```
 
