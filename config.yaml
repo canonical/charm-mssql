@@ -7,7 +7,7 @@ options:
     type: string
     name: mssql
     description: The docker image to install.
-    default: mcr.microsoft.com/mssql/server:20179-latest
+    default: mcr.microsoft.com/mssql/server:2019-latest
   ports:
       type: string
       description: |
